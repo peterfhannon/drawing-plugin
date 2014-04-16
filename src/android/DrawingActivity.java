@@ -59,7 +59,7 @@ public class DrawingActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.activity_fullscreen);
+		setContentView(R.layout.activity_drawing);
 
 		//final View contentView = findViewById(R.id.fullscreen_content);
 		
