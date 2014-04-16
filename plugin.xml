@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+		id="com.unit11apps.drawing" version="0.1.0">
+	<name>Drawing</name>
+	<description>Unit11 Drawing Plugin</description>
+	<license>Apache 2.0</license>
+	<keywords>drawing</keywords>
+	<js-module src="www/drawing.js" name="Drawing">
+		<clobbers target="Drawing" />
+	</js-module>
+
+	<platform name="android">
+		<config-file target="res/xml/config.xml" parent="/*">
+			<feature name="Drawing" >
+				<param name="android-package" value="com.unit11apps.drawing.Drawing"/>
+			</feature>
+		</config-file>
+	
+		<config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <activity
+				android:name="com.unit11apps.drawing.DrawingActivity"
+				android:configChanges="orientation|keyboardHidden|screenSize"
+				android:label="DrawingActivity"
+				android:theme="@style/DrawingTheme" >
+			</activity>
+        </config-file>
+	
+		<source-file src="src/android/Drawing.java" target-dir="src/com/unit11apps/drawing" />
+		<source-file src="src/android/DrawingActivity.java" target-dir="src/com/unit11apps/drawing" />
+		<source-file src="src/android/util/SystemUiHider.java" target-dir="src/com/unit11apps/drawing/util" />
+		<source-file src="src/android/util/SystemUiHiderBase.java" target-dir="src/com/unit11apps/drawing/util" />
+		<source-file src="src/android/util/SystemUiHiderHoneycomb.java" target-dir="src/com/unit11apps/drawing/util" />
+		<source-file src="res/layout/activity_drawing.xml" target-dir="res/layout" />
+		<source-file src="res/values/echo.xml" target-dir="res/values" />
+		<source-file src="res/values/attrs.xml" target-dir="res/values" />
+	</platform>  
+</plugin>
