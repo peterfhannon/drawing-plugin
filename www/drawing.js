@@ -5,10 +5,12 @@
 var exec = require("cordova/exec");
 
 var Drawing = {
-    drawing: function() {
-    	alert("Drawing::drawing");
+    drawing: function(drawingArgs) {
+    	var serializedArgs = JSON.stringify(drawingArgs);
     	
-        exec(function(){alert("SUCCESS");}, function(error){alert("error");}, "Drawing", "drawing", []);
+    	console.log(serializedArgs);
+    	
+        exec(function(){alert("SUCCESS");}, function(error){alert("error");}, "Drawing", "drawing", [serializedArgs]);
     }
 };
 
