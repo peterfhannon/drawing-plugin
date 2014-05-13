@@ -1,55 +1,111 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#00000000"
-    tools:context="com.unit11apps.streamingVideoTest.DrawingActivity" >
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+	android:id="@+id/drawing_content"
+	android:background="@drawable/background">
+    
+    <com.unit11apps.drawing.DrawingView
+	    android:id="@+id/drawingCanvasView"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent">
+    </com.unit11apps.drawing.DrawingView>
+    
+	<LinearLayout
+	    android:layout_width="fill_parent"
+    	android:layout_height="fill_parent"
+	    android:orientation="vertical">
+	
+	    <!--
+	         The primary full-screen view. This can be replaced with whatever view
+	         is needed to present your content, e.g. VideoView, SurfaceView,
+	         TextureView, etc.
+	    -->
+	
+	    <!--
+	         This FrameLayout insets its children based on system windows using
+	         android:fitsSystemWindows.
+	    -->
+	    
+	    <View
+		  	android:layout_width="fill_parent"
+		  	android:layout_height="0dp"
+		  	android:layout_weight="0.1">
+		</View>
+	
+	    <ImageView
+	        android:id="@+id/imageView1"
+	        android:layout_height="0dp"
+	        android:layout_width="fill_parent"
+	        android:layout_weight="0.73"
+	        android:src="@drawable/e" android:contentDescription="@string/image1Desc"/>
+	    
+	    <View
+		  	android:layout_width="fill_parent"
+		  	android:layout_height="0dp"
+		  	android:layout_weight="0.17">
+		</View>
+	</LinearLayout>
+	<RelativeLayout
+	    android:layout_width="fill_parent"
+    	android:layout_height="fill_parent">
+	    	    
+	   	<ImageView
+	        android:id="@+id/pointer"
+	        android:layout_width="wrap_content"
+        	android:layout_height="wrap_content"
+	        android:layout_alignParentLeft="true"
+	        android:layout_alignParentTop="true"
+	        android:visibility="gone"
+	        android:src="@drawable/pointer" android:contentDescription="Pointer"/> <!-- android:layout_marginLeft="-400dp" android:background="@android:color/black" -->
+	    
+	    <Button
+	        android:id="@+id/backButton"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/backButton" />
+	    
+	    <Button
+	        android:id="@+id/clearButton"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentBottom="true"
+	        android:text="@string/clearButton" />
+	    
+	    <Button
+	        android:id="@+id/submitButton"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentRight="true" 
+	        android:layout_alignParentBottom="true"
+	        android:text="@string/submitButton" />
+	    
+	    <Button
+	        android:id="@+id/demoButton"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentRight="true" 
+	        android:layout_alignParentTop="true"
+	        android:text="@string/demoButton" />
+	    
+	    <ImageView
+	        android:id="@+id/tick"
+	        android:layout_width="wrap_content"
+        	android:layout_height="wrap_content"
+	        android:layout_alignParentBottom="true"
+	        android:layout_alignParentRight="true"
+	        android:layout_marginBottom="-400dp"
+	        android:visibility="gone"
+	        android:src="@drawable/tick" android:contentDescription="@string/image1Desc"/>
+	    
+	    <ImageView
+	        android:id="@+id/cross"
+	        android:layout_width="wrap_content"
+        	android:layout_height="wrap_content"
+	        android:layout_alignParentBottom="true"
+	        android:layout_alignParentRight="true"
+	        android:layout_marginBottom="-400dp"
+	        android:visibility="gone"
+	        android:src="@drawable/cross" android:contentDescription="@string/image1Desc"/>
 
-    <!--
-         The primary full-screen view. This can be replaced with whatever view
-         is needed to present your content, e.g. VideoView, SurfaceView,
-         TextureView, etc.
-    -->
-
-    <TextView
-        android:id="@+id/fullscreen_content"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:keepScreenOn="true"
-        android:text="DUMMY CONTENT"
-        android:textColor="#33b5e5"
-        android:textSize="50sp"
-        android:textStyle="bold" />
-
-    <!--
-         This FrameLayout insets its children based on system windows using
-         android:fitsSystemWindows.
-    -->
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true" >
-
-        <LinearLayout
-            android:id="@+id/fullscreen_content_controls"
-            style="?metaButtonBarStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:background="#ffffff"
-            android:orientation="horizontal"
-            tools:ignore="UselessParent" >
-
-            <Button
-                android:id="@+id/dummy_button"
-                style="?metaButtonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="DUMMY BUTTON" />
-        </LinearLayout>
-    </FrameLayout>
-
+	</RelativeLayout>
 </FrameLayout>

@@ -10,6 +10,7 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
+import org.json.JSONException;
 
 import com.unit11apps.drawing.DrawingActivity;
 
@@ -24,15 +25,23 @@ public class Drawing extends CordovaPlugin {
         String result = "";
 
         if (action.equals("drawing")) {
-        	cordova.getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Context context = cordova.getActivity()
-                            .getApplicationContext();
-                    Intent intent = new Intent(context, DrawingActivity.class);
-                    cordova.getActivity().startActivity(intent);
-                }
-            });
+        	
+            Context context = cordova.getActivity()
+                    .getApplicationContext();
+            Intent intent = new Intent(context, DrawingActivity.class);
+            
+            String letterData;
+			try {
+				letterData = args.getString(0);
+					            
+	            intent.putExtra("letterData", letterData);
+	            
+	            cordova.getActivity().startActivity(intent);
+	            
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
             return true;
 		}

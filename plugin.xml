@@ -43,12 +43,7 @@
 		</config-file>
 	
 		<config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <activity
-				android:name="com.unit11apps.drawing.DrawingActivity"
-				android:configChanges="orientation|keyboardHidden|screenSize"
-				android:label="DrawingActivity"
-				android:theme="@style/DrawingTheme" >
-			</activity>
+            <activity android:configChanges="orientation|keyboardHidden|screenSize" android:label="DrawingActivity" android:name="com.unit11apps.drawing.DrawingActivity" android:theme="@style/DrawingTheme" android:noHistory="true"/>
         </config-file>
 	
 		<source-file src="src/android/Drawing.java" target-dir="src/com/unit11apps/drawing" />
@@ -57,7 +52,5 @@
 		<source-file src="src/android/util/SystemUiHiderBase.java" target-dir="src/com/unit11apps/drawing/util" />
 		<source-file src="src/android/util/SystemUiHiderHoneycomb.java" target-dir="src/com/unit11apps/drawing/util" />
 		<source-file src="res/layout/activity_drawing.xml" target-dir="res/layout" />
-		<source-file src="res/values/drawing.xml" target-dir="res/values" />
-		<source-file src="res/values/attrs.xml" target-dir="res/values" />
 	</platform> 
 </plugin>
