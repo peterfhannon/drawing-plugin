@@ -23,6 +23,7 @@
 		<source-file src="src/android/Drawing.java" target-dir="src/com/unit11apps/drawing" />
 		<source-file src="src/android/DrawingActivity.java" target-dir="src/com/unit11apps/drawing" />
 		<source-file src="src/android/DrawingView.java" target-dir="src/com/unit11apps/drawing" />
+		<source-file src="src/android/LetterPointData.java" target-dir="src/com/unit11apps/drawing" />
 		<source-file src="src/android/util/SystemUiHider.java" target-dir="src/com/unit11apps/drawing/util" />
 		<source-file src="src/android/util/SystemUiHiderBase.java" target-dir="src/com/unit11apps/drawing/util" />
 		<source-file src="src/android/util/SystemUiHiderHoneycomb.java" target-dir="src/com/unit11apps/drawing/util" />
