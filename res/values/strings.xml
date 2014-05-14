@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CircusLetters</string>
+    <string name="backButton">Back</string>
+    <string name="clearButton">Clear</string>
+    <string name="submitButton">Submit</string>
+    <string name="demoButton">Demo</string>
+    <string name="image1Desc">Letter</string>
+</resources>
