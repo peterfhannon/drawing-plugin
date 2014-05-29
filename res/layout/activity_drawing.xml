@@ -2,18 +2,13 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
 	android:id="@+id/drawing_content"
-	android:background="@drawable/background">
-    
-    <com.unit11apps.drawing.DrawingView
-	    android:id="@+id/drawingCanvasView"
-	    android:layout_width="fill_parent"
-	    android:layout_height="fill_parent">
-    </com.unit11apps.drawing.DrawingView>
+	>
     
 	<LinearLayout
 	    android:layout_width="fill_parent"
     	android:layout_height="fill_parent"
-	    android:orientation="vertical">
+	    android:orientation="vertical"
+	    >
 	
 	    <!--
 	         The primary full-screen view. This can be replaced with whatever view
@@ -37,7 +32,7 @@
 	        android:layout_height="0dp"
 	        android:layout_width="fill_parent"
 	        android:layout_weight="0.73"
-	        android:src="@drawable/e" android:contentDescription="@string/image1Desc"/>
+	        android:contentDescription="@string/image1Desc"/>
 	    
 	    <View
 		  	android:layout_width="fill_parent"
@@ -45,47 +40,155 @@
 		  	android:layout_weight="0.17">
 		</View>
 	</LinearLayout>
+    
+	<LinearLayout
+	    android:layout_width="fill_parent"
+    	android:layout_height="fill_parent"
+	    android:orientation="vertical">
+	    
+	    <View
+		  	android:layout_width="fill_parent"
+		  	android:layout_height="0dp"
+		  	android:layout_weight="0.2">
+		</View>
+	    	
+	    <RelativeLayout
+		    android:layout_width="fill_parent"
+	    	android:layout_height="0dp"
+	    	android:layout_weight="0.6"
+		    android:orientation="vertical">
+		    
+	        <LinearLayout
+			    android:layout_width="wrap_content"
+		    	android:layout_height="fill_parent"
+		    	android:layout_marginLeft="18px"
+		    	android:layout_alignParentLeft="true"
+			    android:layout_alignParentTop="true"
+			    android:orientation="vertical">
+	    
+		   		<ImageView
+			        android:id="@+id/tokenA"
+			        android:layout_width="wrap_content"
+			        android:layout_height="0dp"
+		        	android:layout_weight="1"
+		        	android:layout_marginTop="20px"/>
+		   		
+		   		<ImageView
+			        android:id="@+id/tokenB"
+			        android:layout_width="wrap_content"
+			        android:layout_height="0dp"
+		        	android:layout_weight="1"
+		        	android:layout_marginTop="20px"/>
+		   		
+		   		<ImageView
+			        android:id="@+id/tokenC"
+			        android:layout_width="wrap_content"
+			        android:layout_height="0dp"
+		        	android:layout_weight="1"
+		        	android:layout_marginTop="20px"/>
+		   	</LinearLayout>
+	   		
+	        <LinearLayout
+			    android:layout_width="wrap_content"
+		    	android:layout_height="fill_parent"
+		    	android:layout_marginRight="18px"
+		    	android:layout_alignParentRight="true"
+			    android:layout_alignParentTop="true"
+			    android:orientation="vertical">
+		   		
+		   		<ImageView
+			        android:id="@+id/tokenD"
+			        android:layout_width="wrap_content"
+		        	android:layout_height="0dp"
+		        	android:layout_weight="1"
+		        	android:layout_marginTop="20px"/>
+		   		
+		   		<ImageView
+			        android:id="@+id/tokenE"
+			        android:layout_width="wrap_content"
+		        	android:layout_height="0dp"
+		        	android:layout_weight="1"
+		        	android:layout_marginTop="20px"/>
+		   		
+		   		<ImageView
+			        android:id="@+id/tokenF"
+			        android:layout_width="wrap_content"
+		        	android:layout_height="0dp"
+		        	android:layout_weight="1"
+		        	android:layout_marginTop="20px"/>
+	   		</LinearLayout>
+	   	</RelativeLayout>
+	   	
+	    <View
+		  	android:layout_width="fill_parent"
+		  	android:layout_height="0dp"
+		  	android:layout_weight="0.2">
+		</View>
+	</LinearLayout>
+
+	<com.unit11apps.drawing.DrawingView
+	    android:id="@+id/drawingCanvasView"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent"
+	    >
+    </com.unit11apps.drawing.DrawingView>
+	
 	<RelativeLayout
 	    android:layout_width="fill_parent"
     	android:layout_height="fill_parent">
 	    	    
 	   	<ImageView
 	        android:id="@+id/pointer"
-	        android:layout_width="wrap_content"
-        	android:layout_height="wrap_content"
+	        android:layout_width="500px"
+        	android:layout_height="800px"
 	        android:layout_alignParentLeft="true"
 	        android:layout_alignParentTop="true"
 	        android:visibility="gone"
-	        android:src="@drawable/pointer" android:contentDescription="Pointer"/> <!-- android:layout_marginLeft="-400dp" android:background="@android:color/black" -->
+	        android:scaleType="fitEnd"
+	        android:src="@drawable/pointer" android:contentDescription="Pointer" /> <!-- android:layout_marginLeft="-400dp" android:background="@android:color/black" -->
+	</RelativeLayout>
+	
+	<RelativeLayout
+	    android:layout_width="fill_parent"
+    	android:layout_height="fill_parent">
+
 	    
 	    <Button
 	        android:id="@+id/backButton"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/backButton" />
+	        android:layout_width="100px"
+	        android:layout_height="100px"
+	        android:layout_marginLeft="18px"
+	        android:layout_marginTop="18px"
+	        android:background="@drawable/back_up_button_def"/>
 	    
 	    <Button
 	        android:id="@+id/clearButton"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
 	        android:layout_alignParentBottom="true"
-	        android:text="@string/clearButton" />
+	        android:layout_width="100px"
+	        android:layout_height="100px"
+	        android:layout_marginLeft="18px"
+	        android:layout_marginBottom="18px"
+	        android:background="@drawable/erase_button_def"/>
 	    
 	    <Button
 	        android:id="@+id/submitButton"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
+	        android:layout_width="100px"
+	        android:layout_height="100px"
 	        android:layout_alignParentRight="true" 
 	        android:layout_alignParentBottom="true"
-	        android:text="@string/submitButton" />
+	        android:layout_marginRight="18px"
+	        android:layout_marginBottom="18px"
+	        android:background="@drawable/go_button_def" />
 	    
 	    <Button
 	        android:id="@+id/demoButton"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
+	        android:layout_width="100px"
+	        android:layout_height="100px"
 	        android:layout_alignParentRight="true" 
 	        android:layout_alignParentTop="true"
-	        android:text="@string/demoButton" />
+	        android:layout_marginRight="18px"
+	        android:layout_marginTop="18px"
+	        android:background="@drawable/demo_button_def" />
 	    
 	    <ImageView
 	        android:id="@+id/tick"

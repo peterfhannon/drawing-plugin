@@ -9,15 +9,19 @@ import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Debug;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -30,7 +34,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
-import com.unit11apps.circusletters.R;
+import com.unit11apps.BlackbeardsAlphabet.R;
 import com.unit11apps.drawing.LetterPointData.LetterPoint;
 import com.unit11apps.drawing.LetterPointData.Segment;
 
@@ -63,6 +67,9 @@ public class DrawingView extends FrameLayout {
 	private float letterOffsetLeft;
 	private Paint mPaint;
 	private boolean disableDrawing = false;
+	private float mysteriousPointScale;
+	private float standardLineThickness = 48;
+	private float lineThickness = 0;
 	
 	public LetterPointData getLetterPointData() {
 		return letterPointData;
@@ -94,7 +101,7 @@ public class DrawingView extends FrameLayout {
 	private float captureRadius = 45;
 	private float oldX = -1;
 	private float oldY = -1;
-	private int currentPoint = 0;
+	private int currentPoint = -1;
 	private int currentSegment = 0;
     private boolean outsideLetterBoundry = false;
     private boolean previouslyOutsideLetterBoundry = false;
@@ -109,7 +116,8 @@ public class DrawingView extends FrameLayout {
 	
 	private boolean debugMode = false;
 	
-    private float mX, mY;
+    private float mX = -1;
+    private float mY = -1;
 	private int pointTouchMoveThreshold = 400;
 	private boolean ignoreStartingPoint = false;
 	private String mode = "test-writing";
@@ -139,56 +147,6 @@ public class DrawingView extends FrameLayout {
     {
     	da = drawingActivity;
     	
-        letterData = da.getLetterData();
-        letterDataConfig = da.getLetterDataConfig();
-        pointRadius = da.getPointRadius();
-        scaleFactor = da.getScaleFactor();
-        
-        DisplayMetrics dm = da.getResources().getDisplayMetrics();
-        density = dm.density;
-        
-        scaledPointRadius = (float)(pointRadius * scaleFactor) * density;
-        
-        //get the letter data
-        try {
-			JSONObject letterData = da.getLetterData();
-			
-			currentLetter = letterData.getString("character");
-			
-			Log.d("DrawingActivity",currentLetter);
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-        mPath = new Path();
-        mPaint = new Paint();
-        mPaint.setAntiAlias(true);
-	    mPaint.setDither(true);
-	    mPaint.setColor(Color.YELLOW);
-	    mPaint.setStyle(Paint.Style.STROKE);
-	    mPaint.setStrokeJoin(Paint.Join.ROUND);
-	    mPaint.setStrokeCap(Paint.Cap.ROUND);
-	    mPaint.setStrokeWidth(40);
-        mBitmapPaint = new Paint(Paint.DITHER_FLAG);  
-        circlePaint = new Paint();
-        circlePath = new Path();
-        circlePaint.setAntiAlias(true);
-        circlePaint.setColor(Color.BLUE);
-        circlePaint.setStyle(Paint.Style.STROKE);
-        circlePaint.setStrokeJoin(Paint.Join.MITER);
-        circlePaint.setStrokeWidth(4f);
-        circlePaint2 = new Paint();
-        circlePath2 = new Path();
-        circlePaint2.setAntiAlias(true);
-        circlePaint2.setColor(Color.BLUE);
-        circlePaint2.setStyle(Paint.Style.STROKE);
-        circlePaint2.setStrokeJoin(Paint.Join.MITER);
-        circlePaint2.setStrokeWidth(4f);
-        
-    	//get the letterPointData
-        letterPointData = new LetterPointData(letterData, letterDataConfig);
-        
         Display display = da.getWindowManager().getDefaultDisplay();
         Point displaySize = new Point();
         
@@ -207,21 +165,85 @@ public class DrawingView extends FrameLayout {
         	displayWidth = display.getWidth();
         }
         
+    	mysteriousPointScale = 1.4f;
+
         //get the window width and height;
-        drawingAreaHeight = displayHeight;
+        //drawingAreaHeight = displayHeight;
+        drawingAreaHeight = (73 * displayHeight / 100) * mysteriousPointScale;// * density;
     	drawingAreaWidth = (drawingAreaHeight/3) * 4; //4:3 area
-    	drawingAreaTop = (drawingAreaHeight/10);
+    	drawingAreaTop = (displayHeight/10);
     	drawingAreaLeft = (displayWidth - drawingAreaWidth)/2;
     	
-    	//add mysterious offsets
-    	mysteriousLeft = (22 * scaleFactor);
-    	mysteriousTop = (90 * scaleFactor); //(general letter image offset + the 10% space added above in layout)
+    	//this is how to work out the scalefactor
+    	scaleFactor = displayHeight / 768;
+    	
+    	lineThickness = (float) (standardLineThickness * scaleFactor);
+    	
+        letterData = da.getLetterData();
+        letterDataConfig = da.getLetterDataConfig();
+        pointRadius = da.getPointRadius() + (6);
+        //scaleFactor = da.getScaleFactor();
+        
+        scaledPointRadius = (float)(pointRadius * scaleFactor);
+        
+        //get the letter data
+        try {
+			JSONObject letterData = da.getLetterData();
+			
+			currentLetter = letterData.getString("character");
+			
+			Log.d("DrawingActivity",currentLetter);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+        mPath = new Path();
+        mPaint = new Paint();
+        mPaint.setAntiAlias(true);
+	    mPaint.setDither(true);
+	    mPaint.setColor(Color.parseColor("#8836C7"));
+	    mPaint.setStyle(Paint.Style.STROKE);
+	    mPaint.setStrokeJoin(Paint.Join.ROUND);
+	    mPaint.setStrokeCap(Paint.Cap.ROUND);
+	    mPaint.setStrokeWidth(lineThickness);
+        mBitmapPaint = new Paint(Paint.DITHER_FLAG);  
+        
+        if(debugMode)
+        {
+	        circlePaint = new Paint();
+	        circlePath = new Path();
+	        circlePaint.setAntiAlias(true);
+	        circlePaint.setColor(Color.BLUE);
+	        circlePaint.setStyle(Paint.Style.STROKE);
+	        circlePaint.setStrokeJoin(Paint.Join.MITER);
+	        circlePaint.setStrokeWidth(4f);
+	        circlePaint2 = new Paint();
+	        circlePath2 = new Path();
+	        circlePaint2.setAntiAlias(true);
+	        circlePaint2.setColor(Color.BLUE);
+	        circlePaint2.setStyle(Paint.Style.STROKE);
+	        circlePaint2.setStrokeJoin(Paint.Join.MITER);
+	        circlePaint2.setStrokeWidth(4f);
+        }
+        
+    	//get the letterPointData
+        letterPointData = new LetterPointData(letterData, letterDataConfig);
+    	
+        mysteriousLeft = 0;
+    	mysteriousTop = 0;
+        
+    	//add point capture radius
+    	mysteriousLeft = mysteriousLeft + ((4.74 / 100) * drawingAreaWidth);
+    	mysteriousTop = mysteriousTop + ((3.55 / 100) * drawingAreaHeight);
+    	
+    	float mysteriousOffsetAmount = drawingAreaHeight/10;
     	
     	JSONObject letterPosition;
 		try {
-			letterPosition = letterDataConfig.getJSONObject("position");
-	    	letterOffsetTop = (float)(letterPosition.getDouble("top") * scaleFactor);
-	    	letterOffsetLeft = (float)(letterPosition.getDouble("left") * scaleFactor);
+			letterPosition = letterDataConfig.getJSONObject("drawingPluginPosition");
+	    	letterOffsetTop = (float)((letterPosition.getDouble("top")/100) * mysteriousOffsetAmount);
+	    	letterOffsetLeft = (float)((letterPosition.getDouble("left")/100) * mysteriousOffsetAmount);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -233,7 +255,23 @@ public class DrawingView extends FrameLayout {
 		}
     }
     
-    public float getDrawingAreaLeft() {
+    public double getMysteriousLeft() {
+		return mysteriousLeft;
+	}
+
+	public void setMysteriousLeft(double mysteriousLeft) {
+		this.mysteriousLeft = mysteriousLeft;
+	}
+
+	public double getMysteriousTop() {
+		return mysteriousTop;
+	}
+
+	public void setMysteriousTop(double mysteriousTop) {
+		this.mysteriousTop = mysteriousTop;
+	}
+
+	public float getDrawingAreaLeft() {
 		return drawingAreaLeft;
 	}
 
@@ -272,6 +310,11 @@ public class DrawingView extends FrameLayout {
     	
     	circlePath2.reset();
     	
+    	circlePath2.addCircle(drawingAreaLeft, drawingAreaTop, scaledPointRadius, Path.Direction.CW);
+    	circlePath2.addCircle(drawingAreaLeft + (drawingAreaWidth), drawingAreaTop, scaledPointRadius, Path.Direction.CW);
+    	circlePath2.addCircle(drawingAreaLeft, drawingAreaTop + (drawingAreaHeight), scaledPointRadius, Path.Direction.CW);
+    	circlePath2.addCircle(drawingAreaLeft + (drawingAreaWidth),  drawingAreaTop + (drawingAreaHeight), scaledPointRadius, Path.Direction.CW);
+    	
     	for(int i=0; i<totalSegments; i++)
     	{
     		Segment thisSegment = (Segment)(segments.get(i));
@@ -283,8 +326,8 @@ public class DrawingView extends FrameLayout {
         	{
     			LetterPoint point = points.get(j);
     			
-    			float x = (float)(((point.x/100) * drawingAreaWidth) + drawingAreaLeft + mysteriousLeft) - letterOffsetLeft;
-    			float y = (float)(((point.y/100) * drawingAreaHeight) + drawingAreaTop + mysteriousTop) - letterOffsetTop;
+    			float x = (float)(((point.x/100) * drawingAreaWidth) + drawingAreaLeft + mysteriousLeft) + letterOffsetLeft;
+    			float y = (float)(((point.y/100) * drawingAreaHeight) + drawingAreaTop + mysteriousTop) + letterOffsetTop;
     			
                 circlePath2.addCircle(x, y, scaledPointRadius, Path.Direction.CW);
         	}
@@ -294,106 +337,169 @@ public class DrawingView extends FrameLayout {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-
-        mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        mCanvas = new Canvas(mBitmap);
+        
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inPurgeable = true;
+        //mBitmap = Bitmap.createBitmap(w, h, o);
+        
+        Resources res = getContext().getResources();
+        
+        Bitmap b = BitmapFactory.decodeResource(res, R.drawable.background, o);
+        
+        mBitmap = Bitmap.createScaledBitmap(b, w, h, false);
+        
+        Drawable d = new BitmapDrawable(da.getResources(),mBitmap);
+        
+        da.setMainBackground(d);
+        
+        b.recycle();
+        
+        b = null;
+        
+        mCanvas = new Canvas();
     }
     
     @Override
     protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        canvas.drawBitmap( mBitmap, 0, 0, mBitmapPaint);
-        
-        if(debugMode)
-        {
-        	canvas.drawPath( circlePath2,  circlePaint2);
-        }
+        //super.onDraw(canvas);
+    	
+    	//canvas.drawBitmap( mBitmap, 0, 0, mBitmapPaint);
 
-        canvas.drawPath( mPath,  mPaint);
-
-        if(debugMode)
-        {
-        	canvas.drawPath( circlePath,  circlePaint);
+    	//TODO : Avoid drawing when demoing?
+        if(canvas != null)
+        { 
+	        if(debugMode)
+	        {
+	        	//canvas.drawBitmap( mBitmap, 0, 0, mBitmapPaint);
+	        	
+	        	canvas.drawPath( circlePath2,  circlePaint2);
+	        }
+	
+	        canvas.drawPath( mPath,  mPaint);
+	
+	        if(debugMode)
+	        {
+	        	canvas.drawPath( circlePath,  circlePaint);
+	        }
         }
     }
 
     private void touch_start_draw(float x, float y, boolean valid) {
-    	mPath.reset();
-        mPath.moveTo(x, y);
+        
+    	mPath.moveTo(x, y);
+        
         mX = x;
         mY = y;
+        
+        mPath.lineTo(mX+1, mY+1);
     }
     
     private void touch_move_draw(float x, float y, boolean valid) {
+
     	float dx = Math.abs(x - mX);
         float dy = Math.abs(y - mY);
         if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-             mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
+        	
             mX = x;
             mY = y;
-
-            circlePath.reset();
-            circlePath.addCircle(mX, mY, 30, Path.Direction.CW);
+            
+            mPath.lineTo(mX, mY);
+            
+            if(debugMode)
+            {
+            	circlePath.reset();
+            	circlePath.addCircle(mX, mY, 30, Path.Direction.CW);
+            }
         }
 
     }
     
     private void touch_up_draw() {
         mPath.lineTo(mX, mY);
-        circlePath.reset();
+        
+        if(debugMode)
+        {
+        	circlePath.reset();
+        }
+        
         // commit the path to our offscreen
         mCanvas.drawPath(mPath,  mPaint);
-        // kill this so we don't double draw
-        mPath.reset();
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        float rawX = event.getX();
-        float rawY = event.getY();
-        
-        float x = (float)((rawX - drawingAreaLeft));
-		float y = (float)((rawY - drawingAreaTop));
-
-		boolean valid;
-		
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-            	valid = handleTouchStart(x, y);
-                touch_start_draw(rawX, rawY, valid); 
-                break;
-            case MotionEvent.ACTION_MOVE:
-            	valid = handleTouchMove(x, y);
-                touch_move_draw(rawX, rawY, valid);
-                break;
-            case MotionEvent.ACTION_UP:
-                handleTouchEnd();
-            	touch_up_draw();
-                break;
+        if(da.isEnabled())
+        {
+	    	float rawX = event.getX();
+	        float rawY = event.getY();
+	        
+	        float x = (float)((rawX - drawingAreaLeft));
+			float y = (float)((rawY - drawingAreaTop));
+			
+			int offset = 120;
+	
+			if(x > offset && x < drawingAreaWidth - offset)
+			{
+				
+		        switch (event.getAction()) {
+		            case MotionEvent.ACTION_DOWN:
+		            	handleTouchStart(x, y, rawX, rawY);
+		                break;
+		            case MotionEvent.ACTION_MOVE:
+		            	handleTouchMove(x, y, rawX, rawY);
+		                break;
+		            case MotionEvent.ACTION_UP:
+		                handleTouchEnd();
+		            	touch_up_draw();
+		                break;
+		        }
+		        
+		        invalidate();
+			}
+			else
+			{
+				mX = -1;
+				mY = -1;
+			}
         }
-        
-        invalidate();
+        else
+        {
+        	reset();
+        }
         
         return true;
     } 
     
-    private boolean handleTouchStart(float x, float y)
+    private void handleTouchStart(float x, float y, float rawX, float rawY)
     {
-    	letterPointData.reset();
-    	
     	oldX = -1;
     	oldY = -1;
-    	currentPoint = 0;
+    	mX = -1;
+        mY = -1;
+    	currentPoint = -1;
     	
-    	return handleTouch(x,y, true);
+    	boolean valid = handleTouch(x,y, true);
+    	
+    	touch_start_draw(rawX, rawY, valid);
     }
     
-    private boolean handleTouchMove(float x, float y)
+    private void handleTouchMove(float x, float y, float rawX, float rawY)
     {
     	oldX = x;
     	oldY = y;
     	
-    	return handleTouch(x,y, false);
+    	boolean start = false;
+    	
+    	if(mX == -1 || mY == -1)
+    	{
+    		mPath.moveTo(rawX, rawY);
+    		
+    		start = true;
+    	}
+    	
+    	boolean valid = handleTouch(x,y, start);
+    	
+    	touch_move_draw(rawX, rawY, valid);
     }
     
     private boolean handleTouch(float x, float y, boolean touchStart)
@@ -419,8 +525,11 @@ public class DrawingView extends FrameLayout {
                     LetterPoint thisPoint = points.get(i);
                     
                     //remap points from center of circle (convert % to px)
-                    float pointXpos = (float) (((thisPoint.x / 100) * drawingAreaWidth) + mysteriousLeft) - letterOffsetLeft;  
-                    float pointYpos = (float) (((thisPoint.y / 100) * drawingAreaHeight) + mysteriousTop) - letterOffsetTop; 
+                    //float pointXpos = (float) (((thisPoint.x / 100) * drawingAreaWidth) + mysteriousLeft) - letterOffsetLeft;  
+                    //float pointYpos = (float) (((thisPoint.y / 100) * drawingAreaHeight) + mysteriousTop) - letterOffsetTop; 
+                    
+                    float pointXpos = (float)(((thisPoint.x/100) * drawingAreaWidth) + mysteriousLeft) + letterOffsetLeft;
+        			float pointYpos = (float)(((thisPoint.y/100) * drawingAreaHeight) + mysteriousTop) + letterOffsetTop;
                     
                     //check circle to point intersect
                     boolean found = checkCircleIntersect(pointXpos, pointYpos, x, y, (float)(scaledPointRadius));
@@ -435,7 +544,12 @@ public class DrawingView extends FrameLayout {
                             correctFirstPoint = true;
                             correctInitialFirstPoint = true;
                             
-                            Log.d(getClass().getName(), "CORRECT FIRST POINT DETECTED");
+                            //Log.d(getClass().getName(), "CORRECT FIRST POINT DETECTED");
+                            
+                            //set previous to done
+                        	thisPoint.done = true;
+                        	
+                        	//Log.d(getClass().getName(), "Setting point " + i + " to DONE");
                         }
                     }
                     else if(found && i != currentPoint) //??? Extra stuff
@@ -450,7 +564,7 @@ public class DrawingView extends FrameLayout {
                             //set previous to done
                         	thisPoint.done = true;
                         	
-                        	Log.d(getClass().getName(), "Setting point " + i + " to DONE");
+                        	//Log.d(getClass().getName(), "Setting point " + i + " to DONE");
                         }
                     }
 
@@ -482,7 +596,7 @@ public class DrawingView extends FrameLayout {
         //if its wasn't located
         if(!located)
         {
-        	Log.d(getClass().getName(), "NOT LOCATED! Outside all point boundaries!");
+        	//Log.d(getClass().getName(), "NOT LOCATED! Outside all point boundaries!");
         	
             //automatically fail for being outside area
             outsideLetterBoundry = true;
@@ -528,6 +642,8 @@ public class DrawingView extends FrameLayout {
         //reset the old x and y
         oldX = -1;
         oldY = -1;
+        mX = -1;
+        mY = -1;
 
         boolean illegalPassBackThroughDetected = false;
 
@@ -677,18 +793,39 @@ public class DrawingView extends FrameLayout {
     
     protected void clearCanvas()
     {
+        // kill this so we don't double draw
+        mPath.reset();
+    	
     	mCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+    	
+    	//mCanvas.drawBitmap( mBitmap, 0, 0, mBitmapPaint);
     	
     	invalidate();
     }
     
     protected void reset()
     {
-    	clearCanvas();
+    	if(da.isEnabled())
+    	{
+    		clearCanvas();
+    	}
+    	
+    	letterPointData.reset();
     	
     	disableDrawing = false;
     	
+    	outsideLetterBoundry = false;
     	previouslyOutsideLetterBoundry = false;
+    	
+    	currentSegment = 0;
+    	currentPoint = -1;
+    	
+    	/*
+    	ImageView feedbackTick = (ImageView)da.findViewById(R.id.tick);
+    	feedbackTick.clearAnimation();
+    	
+    	ImageView feedbackCross = (ImageView)da.findViewById(R.id.cross);
+    	feedbackCross.clearAnimation();*/
     }
  
     
@@ -706,7 +843,7 @@ public class DrawingView extends FrameLayout {
 				TimerMethod();
 			}
 			
-		}, 4000);
+		}, 2500);
     }
     
     private void TimerMethod()
@@ -722,8 +859,47 @@ public class DrawingView extends FrameLayout {
     
     private Runnable Timer_Tick = new Runnable() {
 		public void run() {
-		
+			da.setEnabled(true);
 			reset();
 		}
 	};
+
+	public float getScaleFactor() {
+		// TODO Auto-generated method stub
+		return (float)(scaleFactor);
+	}
+	
+	/**
+	 * This method converts dp unit to equivalent pixels, depending on device density. 
+	 * 
+	 * @param dp A value in dp (density independent pixels) unit. Which we need to convert into pixels
+	 * @param context Context to get resources and device specific display metrics
+	 * @return A float value to represent px equivalent to dp depending on device density
+	 */
+	public static float convertDpToPixel(float dp, Context context){
+	    Resources resources = context.getResources();
+	    DisplayMetrics metrics = resources.getDisplayMetrics();
+	    float px = dp * (metrics.densityDpi / 160f);
+	    return px;
+	}
+
+	/**
+	 * This method converts device specific pixels to density independent pixels.
+	 * 
+	 * @param px A value in px (pixels) unit. Which we need to convert into db
+	 * @param context Context to get resources and device specific display metrics
+	 * @return A float value to represent dp equivalent to px value
+	 */
+	public static float convertPixelsToDp(float px, Context context){
+	    Resources resources = context.getResources();
+	    DisplayMetrics metrics = resources.getDisplayMetrics();
+	    float dp = px / (metrics.densityDpi / 160f);
+	    return dp;
+	}
+	
+	public void recycleBitmaps()
+	{
+		mBitmap.recycle();
+		mBitmap = null;
+	}
 }

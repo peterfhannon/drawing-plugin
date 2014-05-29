@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">CircusLetters</string>
+    <string name="app_name">Blackbeard\'s Alphabet</string>
     <string name="backButton">Back</string>
     <string name="clearButton">Clear</string>
     <string name="submitButton">Submit</string>

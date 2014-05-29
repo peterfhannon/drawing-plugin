@@ -18,6 +18,8 @@ import android.content.Context;
 import android.content.Intent;
 
 public class Drawing extends CordovaPlugin {
+	
+	static final int STANDARD_DRAWING = 1;
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
@@ -36,7 +38,7 @@ public class Drawing extends CordovaPlugin {
 					            
 	            intent.putExtra("letterData", letterData);
 	            
-	            cordova.getActivity().startActivity(intent);
+	            cordova.getActivity().startActivityForResult(intent, STANDARD_DRAWING);
 	            
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block

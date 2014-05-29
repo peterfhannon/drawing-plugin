@@ -1,12 +1,18 @@
 package com.unit11apps.drawing;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.unit11apps.circusletters.R;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.unit11apps.BlackbeardsAlphabet.BlackbeardsAlphabet;
+import com.unit11apps.BlackbeardsAlphabet.R;
 import com.unit11apps.drawing.LetterPointData.LetterPoint;
 import com.unit11apps.drawing.LetterPointData.Segment;
+import com.unit11apps.drawing.TokenData.Token;
+import com.unit11apps.drawing.util.SystemUiHider;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -14,16 +20,20 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -54,10 +64,11 @@ import org.json.JSONObject;
  * @see SystemUiHider
  */
 public class DrawingActivity extends Activity {
-	DrawingView dv ;   
+	DrawingView dv;   
 
 	private JSONObject letterData;
 	private JSONObject letterDataConfig;
+	private JSONObject tokenList;
 	private double pointRadius;
 	private double scaleFactor;
 	private Button backButton;
@@ -76,6 +87,20 @@ public class DrawingActivity extends Activity {
 	private double mysteriousPointerTop;
 	private float letterOffsetLeft;
 	private float letterOffsetTop;
+	
+	private boolean enabled;
+	
+	private Bitmap letterBitmap;
+	
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	private TokenData tokenData;
 	
 	public JSONObject getLetterData()
 	{
@@ -96,11 +121,20 @@ public class DrawingActivity extends Activity {
 	{
 		return scaleFactor;
 	}
+	
+	protected ImageView tokenA;
+	protected ImageView tokenB;
+	protected ImageView tokenC;
+	protected ImageView tokenD;
+	protected ImageView tokenE;
+	protected ImageView tokenF;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+		logHeap();
+
 		//Get the letter data JSON
 		String newString;
 		if (savedInstanceState == null) {
@@ -116,19 +150,22 @@ public class DrawingActivity extends Activity {
 		
 		JSONObject args;
 		
-		//Extract the letter data from the JSON
+		//Extract the data from the JSON
 		try {
 			args = new JSONObject(newString);
 			
 			letterData = args.getJSONObject("letterData");
 			letterDataConfig = args.getJSONObject("letterDataConfig");
 			pointRadius = args.getDouble("pointRadius");
-			scaleFactor = args.getDouble("scaleFactor");
+			tokenList = args.getJSONObject("tokenData");
 			
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		//Generate the token data
+		tokenData = new TokenData(tokenList, this);
 
 	    setContentView(R.layout.activity_drawing);
 	    
@@ -139,8 +176,11 @@ public class DrawingActivity extends Activity {
  
 			@Override
 			public void onClick(View arg0) {
-				pointerImageView.setVisibility(View.GONE);
-				dv.reset();
+				if(enabled)
+				{
+					pointerImageView.setVisibility(View.GONE);
+					dv.reset();
+				}
 			}
  
 		});
@@ -150,7 +190,10 @@ public class DrawingActivity extends Activity {
  
 			@Override
 			public void onClick(View arg0) {
-				dv.submit();
+				if(enabled)
+				{
+					dv.submit();
+				}
 			}
  
 		});
@@ -160,6 +203,19 @@ public class DrawingActivity extends Activity {
  
 			@Override
 			public void onClick(View arg0) {
+				Intent returnIntent = new Intent();
+				
+				//Serialize the token data
+				Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+				String json = gson.toJson(tokenData);
+				
+				returnIntent.putExtra("JSONResult",json);
+				setResult(RESULT_OK,returnIntent);
+				
+				recycleBitmaps();
+
+		        System.gc();
+				
 				finish();
 			}
  
@@ -170,7 +226,10 @@ public class DrawingActivity extends Activity {
  
 			@Override
 			public void onClick(View arg0) {
-				startDemo();
+				if(enabled)
+				{
+					startDemo();
+				}
 			}
  
 		});
@@ -189,20 +248,56 @@ public class DrawingActivity extends Activity {
 			e.printStackTrace();
 		}
         
-        int id = getResources().getIdentifier(currentLetter, "drawable", "com.unit11apps.circusletters");
+        int id = getResources().getIdentifier(currentLetter, "drawable", "com.unit11apps.BlackbeardsAlphabet");
         
         image = (ImageView) findViewById(R.id.imageView1);
-        image.setImageResource(id);
+        
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inPurgeable = true;
+        
+        letterBitmap = BitmapFactory.decodeResource(getResources(), id, o);
+        
+        image.setImageBitmap(letterBitmap);
 		
         dv.initialize(this);
+        
+        float scaleFactor = dv.getScaleFactor();
 
-    	mysteriousPointerTop = (60 * scaleFactor);
-    	mysteriousPointerLeft = (60 * scaleFactor); //(general letter image offset + the 10% space added above in layout)
+    	mysteriousPointerTop = dv.getMysteriousTop();
+    	mysteriousPointerLeft = dv.getMysteriousLeft();
     	
     	letterOffsetLeft = dv.getLetterOffsetLeft();
     	letterOffsetTop = dv.getLetterOffsetTop();
     	
 		pointerImageView = (ImageView) findViewById(R.id.pointer);
+		
+		logHeap();
+		
+		//TOKENS
+		tokenA = (ImageView)findViewById(R.id.tokenA);
+		tokenB = (ImageView)findViewById(R.id.tokenB);
+		tokenC = (ImageView)findViewById(R.id.tokenC);
+		tokenD = (ImageView)findViewById(R.id.tokenD);
+		tokenE = (ImageView)findViewById(R.id.tokenE);
+		tokenF = (ImageView)findViewById(R.id.tokenF);
+		
+		ArrayList<Token> tokens = tokenData.getTokens();
+		
+		tokens.get(0).setImageView(tokenA);
+		tokens.get(1).setImageView(tokenB);
+		tokens.get(2).setImageView(tokenC);
+		tokens.get(3).setImageView(tokenD);
+		tokens.get(4).setImageView(tokenE);
+		tokens.get(5).setImageView(tokenF);
+		
+		updateTokens();
+		
+		enabled = true;
+	}
+	
+	void setMainBackground(Drawable d)
+	{
+		((FrameLayout)findViewById(R.id.drawing_content)).setBackgroundDrawable(d);
 	}
 	
 	/**
@@ -220,6 +315,23 @@ public class DrawingActivity extends Activity {
 		}
 	};
 	
+	 private class FeebackCompleteListener implements AnimationListener{
+
+	        @Override
+	        public void onAnimationEnd(Animation animation) {
+	        	//enabled = true;
+	        }
+
+	        @Override
+	        public void onAnimationRepeat(Animation animation) {
+	        }
+
+	        @Override
+	        public void onAnimationStart(Animation animation) {
+	        }
+
+	    }
+	
     
     private class MyAnimationListener implements AnimationListener{
     	
@@ -234,9 +346,13 @@ public class DrawingActivity extends Activity {
         public void onAnimationEnd(Animation animation) {
         	//show the feedback
         	TranslateAnimation newAnimation = new TranslateAnimation(0, 0, -500, 0);
-        	newAnimation.setDuration(1000);
+        	newAnimation.setDuration(500);
         	newAnimation.setFillAfter(false);
         	newAnimation.setStartOffset(1000);
+        	
+        	newAnimation.setAnimationListener(new FeebackCompleteListener());
+        	
+        	mView.clearAnimation();
 
     		ImageView feedbackImage = (ImageView) mView;
     		feedbackImage.startAnimation(newAnimation);
@@ -255,14 +371,18 @@ public class DrawingActivity extends Activity {
     protected void hideFeedbackImages()
     {
     	ImageView feedbackImageViewTick = (ImageView) findViewById(R.id.tick);
+    	feedbackImageViewTick.clearAnimation();
     	feedbackImageViewTick.setVisibility(View.GONE);
     	
     	ImageView feedbackImageViewCross = (ImageView) findViewById(R.id.cross);
+    	feedbackImageViewCross.clearAnimation();
     	feedbackImageViewCross.setVisibility(View.GONE);
     }
     
     protected void feedback(boolean result)
     {
+    	enabled = false;
+    	
     	ImageView feedbackImageView;
     	int soundResourceId;
     	
@@ -271,6 +391,8 @@ public class DrawingActivity extends Activity {
     		feedbackImageView = (ImageView) findViewById(R.id.tick);
     		
     		soundResourceId = R.raw.success1;
+    		
+			tokenData.awardToken();
     	}
     	else
     	{
@@ -284,7 +406,7 @@ public class DrawingActivity extends Activity {
     	
     	//show the feedback
 		TranslateAnimation animation = new TranslateAnimation(0, 0, 0, -500);
-		animation.setDuration(1000);
+		animation.setDuration(500);
 		animation.setFillAfter(true);
 		animation.setAnimationListener(new MyAnimationListener(feedbackImageView));
 
@@ -303,19 +425,13 @@ public class DrawingActivity extends Activity {
         });   
         mp.start();
     }
-    
-	@Override
-	public void onBackPressed() {
-		Intent a = new Intent(Intent.ACTION_MAIN);
-		a.addCategory(Intent.CATEGORY_HOME);
-		a.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		startActivity(a);
-		
-	   return;
-	}
 	
 	public void startDemo()
 	{
+		enabled = false;
+		
+		hideFeedbackImages();
+		
 		dv.reset();
 		
 		//hide the dv
@@ -324,9 +440,11 @@ public class DrawingActivity extends Activity {
 		oldPointerX = 0;
 		oldPointerY = 0;
 		
+		dv.clearCanvas();
+		
 		preparePointer();
 		
-		movePointer();
+		movePointer(0);
 	}
 	
 	protected void preparePointer()
@@ -334,11 +452,12 @@ public class DrawingActivity extends Activity {
 		//show it 
 		pointerImageView.setVisibility(View.VISIBLE);
 		
-		int pointerImageWidth = 800;//;
-
+		int pointerImageWidth = 500;//;
+		int pointerImageHeight = 800;//;
+		
 		LayoutParams params = new LayoutParams(
 				pointerImageWidth,      
-				pointerImageWidth
+				pointerImageHeight
 		);
 		
 		int topMargin = (int)(dv.getDrawingAreaTop());
@@ -354,7 +473,7 @@ public class DrawingActivity extends Activity {
         @Override
         public void onAnimationEnd(Animation animation) {
         	
-        	movePointer();
+        	movePointer(0);
         }
 
         @Override
@@ -368,7 +487,7 @@ public class DrawingActivity extends Activity {
     }
 	
 	//move the wand
-    protected void movePointer()
+    protected void movePointer(int startOffset)
     {
         float x=0,y=0;
         
@@ -383,40 +502,50 @@ public class DrawingActivity extends Activity {
         if(selectedSegmentIndex < segments.size())
         {
         	ArrayList<LetterPoint> points = segments.get(selectedSegmentIndex).getPoints();
-        	LetterPoint thisPoint = points.get(selectedSegmentPoints);
         	
-            //check it is a wand point and within the points length
-            if((selectedSegmentPoints < points.size()) && (thisPoint.wandPoint == true))
-            {
-                //calculate starting point and convert to pixels
-                x = (thisPoint.x * drawingAreaWidth) / 100;
-                y = (thisPoint.y * drawingAreaHeight) / 100;
-                
-                x += mysteriousPointerLeft - letterOffsetLeft;
-                y += mysteriousPointerTop - letterOffsetTop;
-                
-                //increment point counter
-                selectedSegmentPoints++;
-                
-                TranslateAnimation animation = new TranslateAnimation(oldPointerX, x, oldPointerY, y);
-        		animation.setDuration(200);
-        		animation.setFillAfter(true);
-        		animation.setInterpolator(new LinearInterpolator());
-        		animation.setAnimationListener(new PointerAnimationListener());
-
-        		pointerImageView.startAnimation(animation);
-        		
-                oldPointerX = x;
-                oldPointerY = y;
+        	boolean moving = false;
+        	
+        	if(selectedSegmentPoints < points.size())
+        	{
+	        	LetterPoint thisPoint = points.get(selectedSegmentPoints);
+	        	
+	            //check it is a wand point and within the points length
+	            if(thisPoint.wandPoint == true)
+	            {
+	                //calculate starting point and convert to pixels
+	                x = (thisPoint.x * drawingAreaWidth) / 100;
+	                y = (thisPoint.y * drawingAreaHeight) / 100;
+	                
+	                x += mysteriousPointerLeft + letterOffsetLeft;
+	                y += mysteriousPointerTop + letterOffsetTop;
+	                
+	                //increment point counter
+	                selectedSegmentPoints++;
+	                
+	                TranslateAnimation animation = new TranslateAnimation(oldPointerX, x, oldPointerY, y);
+	        		animation.setDuration(200);
+	        		animation.setFillAfter(true);
+	        		animation.setInterpolator(new LinearInterpolator());
+	        		animation.setAnimationListener(new PointerAnimationListener());
+	        		animation.setStartOffset(startOffset);
+	
+	        		pointerImageView.startAnimation(animation);
+	        		
+	                oldPointerX = x;
+	                oldPointerY = y;
+	                
+	                moving = true;
+	            }
             }
-            else
+           
+        	if(!moving)
             {
                 //increment the
                 selectedSegmentIndex++;
                 selectedSegmentPoints = 0;
                 
                 //call this again
-                movePointer();
+                movePointer(500);
             }
         }
         else
@@ -443,6 +572,8 @@ public class DrawingActivity extends Activity {
 		
 		selectedSegmentIndex = 0;
         selectedSegmentPoints = 0;
+        
+        tokenData.updateDisplay();
     }
     
     protected void demoFinished()
@@ -473,6 +604,107 @@ public class DrawingActivity extends Activity {
 		public void run() {
 		
 			reset();
+			enabled = true;
 		}
 	};
+	
+	public int getStatusBarHeight() {
+	  int result = 0;
+	  int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+	  if (resourceId > 0) {
+	      result = getResources().getDimensionPixelSize(resourceId);
+	  }
+	  return result;
+	}
+	
+	public void onResume()
+	{
+		super.onResume();
+		Log.d("DrawingActivity","RESUMING");
+	}
+	
+	@Override
+	public void onBackPressed(){
+		Intent intent = new Intent(getApplicationContext(), BlackbeardsAlphabet.class);
+		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		intent.putExtra("EXIT", true);
+		startActivity(intent);
+		
+		Intent returnIntent = new Intent();
+		setResult(RESULT_CANCELED, returnIntent);
+		
+		finish();
+	}
+	
+	public static void logHeap() {
+        Double allocated = new Double(Debug.getNativeHeapAllocatedSize())/new Double((1048576));
+        Double available = new Double(Debug.getNativeHeapSize())/1048576.0;
+        Double free = new Double(Debug.getNativeHeapFreeSize())/1048576.0;
+        DecimalFormat df = new DecimalFormat();
+        df.setMaximumFractionDigits(2);
+        df.setMinimumFractionDigits(2);
+
+        Log.d("tag", "debug. =================================");
+        Log.d("tag", "debug.heap native: allocated " + df.format(allocated) + "MB of " + df.format(available) + "MB (" + df.format(free) + "MB free)");
+        Log.d("tag", "debug.memory: allocated: " + df.format(new Double(Runtime.getRuntime().totalMemory()/1048576)) + "MB of " + df.format(new Double(Runtime.getRuntime().maxMemory()/1048576))+ "MB (" + df.format(new Double(Runtime.getRuntime().freeMemory()/1048576)) +"MB free)");
+    }
+	
+	protected void updateTokens()
+	{
+		int id;
+		
+		tokenData.updateDisplay();
+	}
+	
+	@Override
+	protected void onDestroy()
+	{
+        super.onDestroy();
+	}
+	
+	protected void recycleBitmaps()
+	{
+        recycleBitmapFromImageView(R.id.imageView1);
+        
+        //Drawable drawable = ((FrameLayout)(findViewById(R.id.drawing_content))).getBackground();
+        
+        //recycleBitmap(drawable);
+        
+        //recycleBitmapFromImageView(R.id.tick);
+        
+        //recycleBitmapFromImageView(R.id.cross);
+        
+        letterBitmap.recycle();
+        
+        dv.recycleBitmaps();
+
+	    System.gc();
+	}
+	
+	protected void recycleBitmapFromImageView(int id)
+	{
+		ImageView imageView = (ImageView)findViewById(id);
+		
+        Drawable drawable = imageView.getDrawable();
+        
+        if (drawable instanceof BitmapDrawable) {
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+            Bitmap bitmap = bitmapDrawable.getBitmap();
+            bitmap.recycle();
+        }
+	}
+	
+	protected void recycleBitmap(int id)
+	{
+		BitmapDrawable drawable = (BitmapDrawable)getApplicationContext().getResources().getDrawable(id);
+
+        Bitmap bitmap = drawable.getBitmap();
+        bitmap.recycle();
+	}
+	
+	protected void recycleBitmap(Drawable drawable)
+	{
+        Bitmap bitmap = ((BitmapDrawable)(drawable)).getBitmap();
+        bitmap.recycle();
+	}
 }
