@@ -17,7 +17,7 @@
 		</config-file>
 	
 		<config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <activity android:configChanges="orientation|keyboardHidden|screenSize" android:label="DrawingActivity" android:name="com.unit11apps.drawing.DrawingActivity" android:theme="@style/DrawingTheme" android:noHistory="true"/>
+            <activity android:configChanges="orientation|keyboardHidden|screenSize" android:screenOrientation="landscape" android:label="DrawingActivity" android:name="com.unit11apps.drawing.DrawingActivity" android:theme="@android:style/Theme.NoTitleBar.Fullscreen"/>
         </config-file>
 	
 		<source-file src="src/android/Drawing.java" target-dir="src/com/unit11apps/drawing" />
@@ -31,5 +31,6 @@
 		<source-file src="res/layout/activity_drawing.xml" target-dir="res/layout" />
 		<source-file src="res/values/drawing.xml" target-dir="res/values" />
 		<source-file src="res/values/attrs.xml" target-dir="res/values" />
+		<source-file src="res/values/drawing_strings.xml" target-dir="res/values" />
 	</platform>  
 </plugin>

@@ -7,8 +7,7 @@ import java.util.TimerTask;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.unit11apps.BlackbeardsAlphabet.BlackbeardsAlphabet;
-import com.unit11apps.BlackbeardsAlphabet.R;
+import com.unit11apps.MagicLetters.R;
 import com.unit11apps.drawing.LetterPointData.LetterPoint;
 import com.unit11apps.drawing.LetterPointData.Segment;
 import com.unit11apps.drawing.TokenData.Token;
@@ -248,7 +247,7 @@ public class DrawingActivity extends Activity {
 			e.printStackTrace();
 		}
         
-        int id = getResources().getIdentifier(currentLetter, "drawable", "com.unit11apps.BlackbeardsAlphabet");
+        int id = getResources().getIdentifier(currentLetter, "drawable", getApplicationContext().getPackageName());
         
         image = (ImageView) findViewById(R.id.imageView1);
         
@@ -625,10 +624,12 @@ public class DrawingActivity extends Activity {
 	
 	@Override
 	public void onBackPressed(){
-		Intent intent = new Intent(getApplicationContext(), BlackbeardsAlphabet.class);
-		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		intent.putExtra("EXIT", true);
-		startActivity(intent);
+		String packageName = getApplicationContext().getPackageName();
+		Intent launchIntent = getApplicationContext().getPackageManager().getLaunchIntentForPackage(packageName);
+		
+		launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		launchIntent.putExtra("EXIT", true);
+		startActivity(launchIntent);
 		
 		Intent returnIntent = new Intent();
 		setResult(RESULT_CANCELED, returnIntent);

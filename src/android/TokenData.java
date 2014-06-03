@@ -7,7 +7,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.google.gson.annotations.Expose;
-import com.unit11apps.BlackbeardsAlphabet.R;
+import com.unit11apps.MagicLetters.R;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -179,21 +179,21 @@ public class TokenData {
 			
 			if(!freeWritingTokenAwarded)
 			{
-				id = da.getApplicationContext().getResources().getIdentifier("token_q", "drawable", "com.unit11apps.BlackbeardsAlphabet");
+				id = da.getApplicationContext().getResources().getIdentifier("token_q", "drawable", da.getApplicationContext().getPackageName());
 				currentDrawableId = id;
 				
 				imageView.setImageResource(id);
 			}
 			else if(freeImageIndexString == "star")
 			{
-				id = da.getApplicationContext().getResources().getIdentifier("token_star", "drawable", "com.unit11apps.BlackbeardsAlphabet");
+				id = da.getApplicationContext().getResources().getIdentifier("token_star", "drawable", da.getApplicationContext().getPackageName());
 				currentDrawableId = id;
 				
 				imageView.setImageResource(id);
 			}
 			else
 			{
-				id = da.getApplicationContext().getResources().getIdentifier("token_"+freeImageIndexString, "drawable", "com.unit11apps.BlackbeardsAlphabet");
+				id = da.getApplicationContext().getResources().getIdentifier("token_"+freeImageIndexString, "drawable", da.getApplicationContext().getPackageName());
 				currentDrawableId = id;
 				
 				BitmapFactory.Options o = new BitmapFactory.Options();
@@ -207,7 +207,7 @@ public class TokenData {
 		
 		public void swapDrawable()
 		{
-			int id = da.getApplicationContext().getResources().getIdentifier("token_"+freeImageIndexString, "drawable", "com.unit11apps.BlackbeardsAlphabet");
+			int id = da.getApplicationContext().getResources().getIdentifier("token_"+freeImageIndexString, "drawable", da.getApplicationContext().getPackageName());
 			
 			BitmapFactory.Options o = new BitmapFactory.Options();
 	        o.inPurgeable = true;
@@ -229,12 +229,6 @@ public class TokenData {
 		
 		public void recycleBitmaps()
 		{
-			/*int id1 = da.getApplicationContext().getResources().getIdentifier("token_q", "drawable", "com.unit11apps.BlackbeardsAlphabet");
-			int id2 = da.getApplicationContext().getResources().getIdentifier("token_"+freeImageIndexString, "drawable", "com.unit11apps.BlackbeardsAlphabet");
-			
-			da.recycleBitmap(id1);
-			da.recycleBitmap(id2);*/
-			
 			tokenBitmap.recycle();
 		}
 	}

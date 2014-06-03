@@ -34,7 +34,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
-import com.unit11apps.BlackbeardsAlphabet.R;
+import com.unit11apps.MagicLetters.R;
 import com.unit11apps.drawing.LetterPointData.LetterPoint;
 import com.unit11apps.drawing.LetterPointData.Segment;
 
