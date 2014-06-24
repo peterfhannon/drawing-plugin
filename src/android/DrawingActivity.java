@@ -7,6 +7,7 @@ import java.util.TimerTask;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
 import com.unit11apps.MagicLetters.R;
 import com.unit11apps.drawing.LetterPointData.LetterPoint;
 import com.unit11apps.drawing.LetterPointData.Segment;
@@ -68,6 +69,7 @@ public class DrawingActivity extends Activity {
 	private JSONObject letterData;
 	private JSONObject letterDataConfig;
 	private JSONObject tokenList;
+	private boolean showStars;
 	private double pointRadius;
 	private double scaleFactor;
 	private Button backButton;
@@ -89,7 +91,13 @@ public class DrawingActivity extends Activity {
 	
 	private boolean enabled;
 	
+	private String currentLetter = "";
+	
 	private Bitmap letterBitmap;
+	private boolean startWithDemo = false;
+	private boolean audioDemo = false;
+	
+	private boolean exiting = false;
 	
 	public boolean isEnabled() {
 		return enabled;
@@ -128,6 +136,11 @@ public class DrawingActivity extends Activity {
 	protected ImageView tokenE;
 	protected ImageView tokenF;
 
+	protected int failHelpThreshold;
+	protected boolean submitOnSuccess;
+	protected int successesRequiredForSubmit;
+	protected int stars;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -156,15 +169,78 @@ public class DrawingActivity extends Activity {
 			letterData = args.getJSONObject("letterData");
 			letterDataConfig = args.getJSONObject("letterDataConfig");
 			pointRadius = args.getDouble("pointRadius");
-			tokenList = args.getJSONObject("tokenData");
+			
+			try {
+				tokenList = args.getJSONObject("tokenData");
+			}
+			catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			try {
+				startWithDemo = args.getBoolean("startWithDemo");
+			}
+			catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			try {
+				audioDemo = args.getBoolean("audioDemo");
+			}
+			catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			//showStars
+			try {
+				showStars = args.getBoolean("showStars");
+			}
+			catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			try {
+				failHelpThreshold = args.getInt("failHelpThreshold");
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			try {
+				submitOnSuccess = args.getBoolean("submitOnSuccess");
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			try {
+				successesRequiredForSubmit = args.getInt("successesRequiredForSubmit");
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			try {
+				stars = args.getInt("stars");
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		//Generate the token data
-		tokenData = new TokenData(tokenList, this);
+		if(tokenList != null)
+		{
+			//Generate the token data
+			tokenData = new TokenData(tokenList, this);
+		}
 
 	    setContentView(R.layout.activity_drawing);
 	    
@@ -202,20 +278,7 @@ public class DrawingActivity extends Activity {
  
 			@Override
 			public void onClick(View arg0) {
-				Intent returnIntent = new Intent();
-				
-				//Serialize the token data
-				Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
-				String json = gson.toJson(tokenData);
-				
-				returnIntent.putExtra("JSONResult",json);
-				setResult(RESULT_OK,returnIntent);
-				
-				recycleBitmaps();
-
-		        System.gc();
-				
-				finish();
+				returnWithResult(false);
 			}
  
 		});
@@ -232,9 +295,7 @@ public class DrawingActivity extends Activity {
 			}
  
 		});
-		
-		String currentLetter = "";
-		
+
 		//get the letter data
         try {
 			JSONObject letterData = getLetterData();
@@ -271,29 +332,116 @@ public class DrawingActivity extends Activity {
 		pointerImageView = (ImageView) findViewById(R.id.pointer);
 		
 		logHeap();
+				
+		if(tokenData != null)
+		{
+			//TOKENS
+			tokenA = (ImageView)findViewById(R.id.tokenA);
+			tokenB = (ImageView)findViewById(R.id.tokenB);
+			tokenC = (ImageView)findViewById(R.id.tokenC);
+			tokenD = (ImageView)findViewById(R.id.tokenD);
+			tokenE = (ImageView)findViewById(R.id.tokenE);
+			tokenF = (ImageView)findViewById(R.id.tokenF);
+			
+			ArrayList<Token> tokens = tokenData.getTokens();
+			
+			tokens.get(0).setImageView(tokenA);
+			tokens.get(1).setImageView(tokenB);
+			tokens.get(2).setImageView(tokenC);
+			tokens.get(3).setImageView(tokenD);
+			tokens.get(4).setImageView(tokenE);
+			tokens.get(5).setImageView(tokenF);
+			
+			updateTokens();
+		}
 		
-		//TOKENS
-		tokenA = (ImageView)findViewById(R.id.tokenA);
-		tokenB = (ImageView)findViewById(R.id.tokenB);
-		tokenC = (ImageView)findViewById(R.id.tokenC);
-		tokenD = (ImageView)findViewById(R.id.tokenD);
-		tokenE = (ImageView)findViewById(R.id.tokenE);
-		tokenF = (ImageView)findViewById(R.id.tokenF);
+		if(showStars)
+		{
+	    	updateStars();
+		}
 		
-		ArrayList<Token> tokens = tokenData.getTokens();
-		
-		tokens.get(0).setImageView(tokenA);
-		tokens.get(1).setImageView(tokenB);
-		tokens.get(2).setImageView(tokenC);
-		tokens.get(3).setImageView(tokenD);
-		tokens.get(4).setImageView(tokenE);
-		tokens.get(5).setImageView(tokenF);
-		
-		updateTokens();
-		
-		enabled = true;
+		if(startWithDemo)
+		{
+			startDemoOnEnter();
+		}
+		else
+		{
+			enabled = true;
+		}
 	}
 	
+	private class ResultData
+	{
+		@Expose public TokenData tokenData;
+		@Expose public int stars;
+		@Expose public boolean success;
+	}
+
+	public void returnWithResult(boolean result) 
+	{
+		if(exiting)
+		{
+			return;
+		}
+		
+		exiting = true;
+		
+		ResultData resultData = new ResultData();
+		
+		resultData.tokenData = tokenData;
+		resultData.stars = stars;
+		resultData.success = result;
+		
+		Intent returnIntent = new Intent();
+		
+		//Serialize the token data
+		Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+		String json = gson.toJson(resultData);
+		
+		returnIntent.putExtra("JSONResult",json);
+		setResult(RESULT_OK,returnIntent);
+		
+		recycleBitmaps();
+
+        System.gc();
+		
+		finish();
+		
+        overridePendingTransition(0, 0);
+	}
+	
+	public int getStars() {
+		return stars;
+	}
+
+	public void setStars(int stars) {
+		this.stars = stars;
+	}
+
+	public int getFailHelpThreshold() {
+		return failHelpThreshold;
+	}
+
+	public void setFailHelpThreshold(int failHelpThreshold) {
+		this.failHelpThreshold = failHelpThreshold;
+	}
+
+	public int getSuccessesRequiredForSubmit() {
+		return successesRequiredForSubmit;
+	}
+
+	public void setSuccessesRequiredForSubmit(int successesRequiredForSubmit) {
+		this.successesRequiredForSubmit = successesRequiredForSubmit;
+	}
+
+	public boolean isSubmitOnSuccess() {
+		return submitOnSuccess;
+	}
+
+	public void setSubmitOnSuccess(boolean submitOnSuccess) {
+		this.submitOnSuccess = submitOnSuccess;
+	}
+
 	void setMainBackground(Drawable d)
 	{
 		((FrameLayout)findViewById(R.id.drawing_content)).setBackgroundDrawable(d);
@@ -367,6 +515,64 @@ public class DrawingActivity extends Activity {
 
     }
     
+    public void feedbackFinished(boolean success)
+    {
+    	boolean earnedEnoughStars = true;
+    	
+    	//check if written required number of times
+    	if((showStars)&&(stars < 3))
+    	{
+    		earnedEnoughStars = false;
+    	}
+    	
+    	if((success)&&(submitOnSuccess)&&(earnedEnoughStars))
+    	{
+    		
+    		returnWithResult(true);
+    	}
+    }
+    
+    protected void updateStars()
+    {
+    	ImageView star;
+    	
+    	star = (ImageView) findViewById(R.id.star1);
+    	
+    	if(stars >= 1)
+    	{
+    		//set the gold star
+        	star.setImageResource(R.drawable.star_gold);
+    	}
+    	else
+    	{
+    		star.setImageResource(R.drawable.star_grey);
+    	}
+    	
+		star = (ImageView) findViewById(R.id.star2);
+		
+    	if(stars >= 2)
+    	{
+    		//set the gold star
+        	star.setImageResource(R.drawable.star_gold);
+    	}
+    	else
+    	{
+    		star.setImageResource(R.drawable.star_grey);
+    	}
+    	
+    	star = (ImageView) findViewById(R.id.star3);
+    	
+    	if(stars >= 3)
+    	{
+    		//set the gold star
+        	star.setImageResource(R.drawable.star_gold);
+    	}
+    	else
+    	{
+    		star.setImageResource(R.drawable.star_grey);
+    	}
+    }
+    
     protected void hideFeedbackImages()
     {
     	ImageView feedbackImageViewTick = (ImageView) findViewById(R.id.tick);
@@ -391,7 +597,18 @@ public class DrawingActivity extends Activity {
     		
     		soundResourceId = R.raw.success1;
     		
-			tokenData.awardToken();
+    		if(showStars)
+    		{
+    			//increment the counter
+    	    	stars++;
+    			
+    			updateStars();
+    		}
+    		
+    		if(tokenData != null)
+    		{
+    			tokenData.awardToken();
+    		}
     	}
     	else
     	{
@@ -424,6 +641,37 @@ public class DrawingActivity extends Activity {
         });   
         mp.start();
     }
+    
+    public void startDemoOnEnter()
+	{
+    	Timer myTimer = new Timer();
+    	
+		myTimer.schedule(new TimerTask() {			
+			@Override
+			public void run() {
+				DoDemo();
+			}
+			
+		}, 500);
+    }
+    
+    private void DoDemo()
+	{
+		//This method is called directly by the timer
+		//and runs in the same thread as the timer.
+
+		//We call the method that will work with the UI
+		//through the runOnUiThread method.
+		runOnUiThread(ReadyForDemo);
+	}
+    
+    
+    private Runnable ReadyForDemo = new Runnable() {
+		public void run() {
+		
+			startDemo();
+		}
+	};
 	
 	public void startDemo()
 	{
@@ -465,6 +713,27 @@ public class DrawingActivity extends Activity {
 		params.setMargins(leftMargin, topMargin, 0, 0);
 		pointerImageView.setLayoutParams(params);
 		pointerImageView.requestLayout();
+		
+		//audio
+		if(audioDemo)
+		{
+			int soundResourceId;
+			
+	    	soundResourceId = getResources().getIdentifier(currentLetter, "raw", getApplicationContext().getPackageName());
+			
+			//play the sound
+			MediaPlayer mp = MediaPlayer.create(this, soundResourceId);
+	        mp.setOnCompletionListener(new OnCompletionListener() {
+
+	            @Override
+	            public void onCompletion(MediaPlayer mp) {
+	                // TODO Auto-generated method stub
+	                mp.release();
+	            }
+
+	        });   
+	        mp.start();
+		}
 	}
 	
 	private class PointerAnimationListener implements AnimationListener{
@@ -572,7 +841,10 @@ public class DrawingActivity extends Activity {
 		selectedSegmentIndex = 0;
         selectedSegmentPoints = 0;
         
-        tokenData.updateDisplay();
+        if(tokenData != null)
+        {
+        	tokenData.updateDisplay();
+        }
     }
     
     protected void demoFinished()
@@ -634,6 +906,8 @@ public class DrawingActivity extends Activity {
 		Intent returnIntent = new Intent();
 		setResult(RESULT_CANCELED, returnIntent);
 		
+		recycleBitmaps();
+		
 		finish();
 	}
 	
@@ -675,7 +949,11 @@ public class DrawingActivity extends Activity {
         
         //recycleBitmapFromImageView(R.id.cross);
         
-        letterBitmap.recycle();
+        if(letterBitmap != null)
+        {
+        	letterBitmap.recycle();
+        	letterBitmap = null;
+        }
         
         dv.recycleBitmaps();
 
@@ -691,7 +969,12 @@ public class DrawingActivity extends Activity {
         if (drawable instanceof BitmapDrawable) {
             BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
             Bitmap bitmap = bitmapDrawable.getBitmap();
-            bitmap.recycle();
+            
+            if(bitmap != null)
+            {
+            	bitmap.recycle();
+            	bitmap = null;
+            }
         }
 	}
 	

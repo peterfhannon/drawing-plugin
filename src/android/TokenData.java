@@ -229,7 +229,11 @@ public class TokenData {
 		
 		public void recycleBitmaps()
 		{
-			tokenBitmap.recycle();
+			if(tokenBitmap != null)
+			{
+				tokenBitmap.recycle();
+				tokenBitmap = null;
+			}
 		}
 	}
 }

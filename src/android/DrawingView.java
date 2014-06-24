@@ -70,6 +70,7 @@ public class DrawingView extends FrameLayout {
 	private float mysteriousPointScale;
 	private float standardLineThickness = 48;
 	private float lineThickness = 0;
+	private boolean lastResultSuccess = false;
 	
 	public LetterPointData getLetterPointData() {
 		return letterPointData;
@@ -831,9 +832,9 @@ public class DrawingView extends FrameLayout {
     
     protected void submit()
     {
-    	boolean result = testDrawing();
-    	
-    	da.feedback(result);
+    	lastResultSuccess = testDrawing();
+
+    	da.feedback(lastResultSuccess);
     	
     	Timer myTimer = new Timer();
     	
@@ -861,6 +862,8 @@ public class DrawingView extends FrameLayout {
 		public void run() {
 			da.setEnabled(true);
 			reset();
+			
+			da.feedbackFinished(lastResultSuccess);
 		}
 	};
 
@@ -899,7 +902,10 @@ public class DrawingView extends FrameLayout {
 	
 	public void recycleBitmaps()
 	{
-		mBitmap.recycle();
-		mBitmap = null;
+		if(mBitmap != null)
+		{
+			mBitmap.recycle();
+			mBitmap = null;
+		}
 	}
 }
