@@ -8,7 +8,7 @@ import java.util.TimerTask;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
-import com.unit11apps.MagicLetters.R;
+import com.unit11apps.circusletters.R;
 import com.unit11apps.drawing.LetterPointData.LetterPoint;
 import com.unit11apps.drawing.LetterPointData.Segment;
 import com.unit11apps.drawing.TokenData.Token;
@@ -96,7 +96,7 @@ public class DrawingActivity extends Activity {
 	private Bitmap letterBitmap;
 	private boolean startWithDemo = false;
 	private boolean audioDemo = false;
-	
+	private String strokeColor = "#8836C7";
 	private boolean exiting = false;
 	
 	public boolean isEnabled() {
@@ -140,6 +140,9 @@ public class DrawingActivity extends Activity {
 	protected boolean submitOnSuccess;
 	protected int successesRequiredForSubmit;
 	protected int stars;
+	private boolean submitOnFullTokens;
+	private boolean playLetterSoundOnEnter;
+	private boolean playLetterSoundOnCorrect;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -194,9 +197,26 @@ public class DrawingActivity extends Activity {
 				e.printStackTrace();
 			}
 			
+			try {
+				strokeColor = args.getString("strokeColor");
+			}
+			catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			//showStars
 			try {
 				showStars = args.getBoolean("showStars");
+			}
+			catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			//submit on full tokens
+			try {
+				submitOnFullTokens = args.getBoolean("submitOnFullTokens");
 			}
 			catch (JSONException e) {
 				// TODO Auto-generated catch block
@@ -230,6 +250,20 @@ public class DrawingActivity extends Activity {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
+			try {
+				playLetterSoundOnEnter = args.getBoolean("playLetterSoundOnEnter");
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			try {
+				playLetterSoundOnCorrect = args.getBoolean("playLetterSoundOnCorrect");
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
 			
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
@@ -319,12 +353,12 @@ public class DrawingActivity extends Activity {
         
         image.setImageBitmap(letterBitmap);
 		
-        dv.initialize(this);
+        dv.initialize(this, strokeColor);
         
         float scaleFactor = dv.getScaleFactor();
 
-    	mysteriousPointerTop = dv.getMysteriousTop();
-    	mysteriousPointerLeft = dv.getMysteriousLeft();
+    	mysteriousPointerTop = dv.getMysteriousTop() -5;
+    	mysteriousPointerLeft = dv.getMysteriousLeft() + 10;
     	
     	letterOffsetLeft = dv.getLetterOffsetLeft();
     	letterOffsetTop = dv.getLetterOffsetTop();
@@ -367,6 +401,11 @@ public class DrawingActivity extends Activity {
 		else
 		{
 			enabled = true;
+		}
+		
+		if(playLetterSoundOnEnter)
+		{
+			playLetterSoundOnEnterTimer();
 		}
 	}
 	
@@ -525,9 +564,22 @@ public class DrawingActivity extends Activity {
     		earnedEnoughStars = false;
     	}
     	
-    	if((success)&&(submitOnSuccess)&&(earnedEnoughStars))
+    	boolean doReturn = false;
+    	
+    	if(success)
     	{
-    		
+    		if(submitOnFullTokens && tokenData.full())
+        	{
+        		doReturn = true;
+        	}
+    		else if(!submitOnFullTokens && (submitOnSuccess)&&(earnedEnoughStars))
+    		{
+    			doReturn = true;
+    		}
+    	}
+    	
+    	if(doReturn)
+    	{
     		returnWithResult(true);
     	}
     }
@@ -609,6 +661,13 @@ public class DrawingActivity extends Activity {
     		{
     			tokenData.awardToken();
     		}
+    		
+            /*
+             * if(playLetterSoundOnCorrect)
+    		{
+    			playLetterSound();
+    		}
+             */
     	}
     	else
     	{
@@ -641,6 +700,37 @@ public class DrawingActivity extends Activity {
         });   
         mp.start();
     }
+    
+    public void playLetterSound()
+    {
+    	int soundResourceId = getResources().getIdentifier(currentLetter+"_name", "raw", getApplicationContext().getPackageName());
+    	
+    	//play the sound
+		MediaPlayer mp = MediaPlayer.create(this, soundResourceId);
+        mp.setOnCompletionListener(new OnCompletionListener() {
+
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                // TODO Auto-generated method stub
+                mp.release();
+            }
+
+        });   
+        mp.start();
+    }
+    
+    public void playLetterSoundOnEnterTimer()
+   	{
+       	Timer myTimer = new Timer();
+       	
+   		myTimer.schedule(new TimerTask() {			
+   			@Override
+   			public void run() {
+   				playLetterSound();
+   			}
+   			
+   		}, 1000);
+       }
     
     public void startDemoOnEnter()
 	{

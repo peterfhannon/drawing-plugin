@@ -7,7 +7,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.google.gson.annotations.Expose;
-import com.unit11apps.MagicLetters.R;
+import com.unit11apps.circusletters.R;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -121,6 +121,18 @@ public class TokenData {
 			Token thisToken = tokens.get(i);
 			
 			thisToken.recycleBitmaps();
+		}
+	}
+	
+	public boolean full()
+	{
+		if(currentTokenIndex == tokens.size())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
 		}
 	}
 	

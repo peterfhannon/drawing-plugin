@@ -1,4 +1,3 @@
-cordova.define("com.unit11apps.drawing.Drawing", function(require, exports, module) { 
 /*-
  * Drawing Plugin for Android
  */
@@ -99,4 +98,3 @@ function dumpObject(obj)
 		alert(obj[i]);
 	}
 }
-});

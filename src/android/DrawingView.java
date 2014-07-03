@@ -34,7 +34,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
-import com.unit11apps.MagicLetters.R;
+import com.unit11apps.circusletters.R;
 import com.unit11apps.drawing.LetterPointData.LetterPoint;
 import com.unit11apps.drawing.LetterPointData.Segment;
 
@@ -144,7 +144,7 @@ public class DrawingView extends FrameLayout {
         setWillNotDraw(false);
     }
     
-    protected void initialize(DrawingActivity drawingActivity)
+    protected void initialize(DrawingActivity drawingActivity, String color)
     {
     	da = drawingActivity;
     	
@@ -203,7 +203,7 @@ public class DrawingView extends FrameLayout {
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
 	    mPaint.setDither(true);
-	    mPaint.setColor(Color.parseColor("#8836C7"));
+	    mPaint.setColor(Color.parseColor(color));
 	    mPaint.setStyle(Paint.Style.STROKE);
 	    mPaint.setStrokeJoin(Paint.Join.ROUND);
 	    mPaint.setStrokeCap(Paint.Cap.ROUND);
