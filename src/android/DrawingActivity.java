@@ -8,7 +8,7 @@ import java.util.TimerTask;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
-import com.unit11apps.circusletters.R;
+import com.unit11apps.MagicNumbers.R;
 import com.unit11apps.drawing.LetterPointData.LetterPoint;
 import com.unit11apps.drawing.LetterPointData.Segment;
 import com.unit11apps.drawing.TokenData.Token;
@@ -96,6 +96,7 @@ public class DrawingActivity extends Activity {
 	private Bitmap letterBitmap;
 	private boolean startWithDemo = false;
 	private boolean audioDemo = false;
+	private String demoAudioFileName = "";
 	private String strokeColor = "#8836C7";
 	private boolean exiting = false;
 	
@@ -143,6 +144,8 @@ public class DrawingActivity extends Activity {
 	private boolean submitOnFullTokens;
 	private boolean playLetterSoundOnEnter;
 	private boolean playLetterSoundOnCorrect;
+	private String characterImageFileName = "";
+	private String characterAudioFileName = "";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -196,6 +199,14 @@ public class DrawingActivity extends Activity {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
+			try {
+				demoAudioFileName = args.getString("demoAudioFileName");
+			}
+			catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}			
 			
 			try {
 				strokeColor = args.getString("strokeColor");
@@ -260,6 +271,20 @@ public class DrawingActivity extends Activity {
 			
 			try {
 				playLetterSoundOnCorrect = args.getBoolean("playLetterSoundOnCorrect");
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			try {
+				characterImageFileName = args.getString("characterImageFileName");
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
+			
+			try {
+				characterAudioFileName = args.getString("characterAudioFileName");
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -342,7 +367,14 @@ public class DrawingActivity extends Activity {
 			e.printStackTrace();
 		}
         
-        int id = getResources().getIdentifier(currentLetter, "drawable", getApplicationContext().getPackageName());
+        String characterImageFileNameToUse = currentLetter;
+        
+        if(characterImageFileName != null && characterImageFileName.length() > 0)
+        {
+        	characterImageFileName = characterImageFileName;
+        }
+        
+        int id = getResources().getIdentifier(characterImageFileName, "drawable", getApplicationContext().getPackageName());
         
         image = (ImageView) findViewById(R.id.imageView1);
         
@@ -403,11 +435,19 @@ public class DrawingActivity extends Activity {
 			enabled = true;
 		}
 		
-		if(playLetterSoundOnEnter)
+		if(!startWithDemo && playLetterSoundOnEnter)
 		{
 			playLetterSoundOnEnterTimer();
 		}
 	}
+	
+	public static boolean isIntegerParseInt(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException nfe) {}
+        return false;
+    }
 	
 	private class ResultData
 	{
@@ -703,7 +743,14 @@ public class DrawingActivity extends Activity {
     
     public void playLetterSound()
     {
-    	int soundResourceId = getResources().getIdentifier(currentLetter+"_name", "raw", getApplicationContext().getPackageName());
+    	String letterSoundAudioFileNameToUse = currentLetter+"_name";
+    	
+    	if(characterAudioFileName.length() > 0)
+    	{
+    		letterSoundAudioFileNameToUse = characterAudioFileName;
+    	}
+    	
+    	int soundResourceId = getResources().getIdentifier(letterSoundAudioFileNameToUse, "raw", getApplicationContext().getPackageName());
     	
     	//play the sound
 		MediaPlayer mp = MediaPlayer.create(this, soundResourceId);
@@ -809,7 +856,14 @@ public class DrawingActivity extends Activity {
 		{
 			int soundResourceId;
 			
-	    	soundResourceId = getResources().getIdentifier(currentLetter, "raw", getApplicationContext().getPackageName());
+			String demoAudioFileNameToUse = currentLetter;
+			
+			if(demoAudioFileName.length() > 0)
+			{
+				demoAudioFileNameToUse = demoAudioFileName;
+			}
+
+	    	soundResourceId = getResources().getIdentifier(demoAudioFileNameToUse, "raw", getApplicationContext().getPackageName());
 			
 			//play the sound
 			MediaPlayer mp = MediaPlayer.create(this, soundResourceId);
