@@ -8,7 +8,7 @@ import java.util.TimerTask;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
-import com.unit11apps.circusletters.R;
+import com.unit11apps.MagicNumbers.R;
 import com.unit11apps.drawing.LetterPointData.LetterPoint;
 import com.unit11apps.drawing.LetterPointData.Segment;
 import com.unit11apps.drawing.TokenData.Token;
@@ -491,7 +491,14 @@ public class DrawingActivity extends Activity {
 
         System.gc();
 		
-		overridePendingTransition(R.xml.jump_in,R.xml.jump_out);
+        if(result)
+        {
+        	overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
+        }
+        else
+        {
+        	overridePendingTransition(R.xml.jump_in,R.xml.jump_out);
+        }
 	}
 	
 	public int getStars() {
