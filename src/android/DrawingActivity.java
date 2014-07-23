@@ -8,7 +8,7 @@ import java.util.TimerTask;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
-import com.unit11apps.MagicNumbers.R;
+import com.unit11apps.circusletters.R;
 import com.unit11apps.drawing.LetterPointData.LetterPoint;
 import com.unit11apps.drawing.LetterPointData.Segment;
 import com.unit11apps.drawing.TokenData.Token;
@@ -19,6 +19,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -37,6 +38,7 @@ import android.os.Debug;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -146,6 +148,8 @@ public class DrawingActivity extends Activity {
 	private boolean playLetterSoundOnCorrect;
 	private String characterImageFileName = "";
 	private String characterAudioFileName = "";
+	
+	private int feedbackTopOffset = 340;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -206,7 +210,21 @@ public class DrawingActivity extends Activity {
 			catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}			
+			}	
+			
+			try {
+				characterImageFileName = args.getString("characterImageFileName");
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
+				
+			try {
+				characterAudioFileName = args.getString("characterAudioFileName");
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+		 	}
 			
 			try {
 				strokeColor = args.getString("strokeColor");
@@ -271,20 +289,6 @@ public class DrawingActivity extends Activity {
 			
 			try {
 				playLetterSoundOnCorrect = args.getBoolean("playLetterSoundOnCorrect");
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			try {
-				characterImageFileName = args.getString("characterImageFileName");
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}	
-			
-			try {
-				characterAudioFileName = args.getString("characterAudioFileName");
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -371,10 +375,10 @@ public class DrawingActivity extends Activity {
         
         if(characterImageFileName != null && characterImageFileName.length() > 0)
         {
-        	characterImageFileName = characterImageFileName;
+        	characterImageFileNameToUse = characterImageFileName;
         }
         
-        int id = getResources().getIdentifier(characterImageFileName, "drawable", getApplicationContext().getPackageName());
+        int id = getResources().getIdentifier(characterImageFileNameToUse, "drawable", getApplicationContext().getPackageName());
         
         image = (ImageView) findViewById(R.id.imageView1);
         
@@ -442,12 +446,13 @@ public class DrawingActivity extends Activity {
 	}
 	
 	public static boolean isIntegerParseInt(String str) {
-        try {
-            Integer.parseInt(str);
-            return true;
-        } catch (NumberFormatException nfe) {}
-        return false;
-    }
+	try {
+		Integer.parseInt(str);
+		return true;
+	} 
+	catch (NumberFormatException nfe) {}
+		return false;
+	}
 	
 	private class ResultData
 	{
@@ -480,13 +485,13 @@ public class DrawingActivity extends Activity {
 		returnIntent.putExtra("JSONResult",json);
 		setResult(RESULT_OK,returnIntent);
 		
+		finish();
+
 		recycleBitmaps();
 
         System.gc();
 		
-		finish();
-		
-        overridePendingTransition(0, 0);
+		overridePendingTransition(R.xml.jump_in,R.xml.jump_out);
 	}
 	
 	public int getStars() {
@@ -570,8 +575,13 @@ public class DrawingActivity extends Activity {
 
         @Override
         public void onAnimationEnd(Animation animation) {
+        	
+        	Resources r = getResources();
+    		
+    		float tpx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, feedbackTopOffset, r.getDisplayMetrics());
+        	
         	//show the feedback
-        	TranslateAnimation newAnimation = new TranslateAnimation(0, 0, -500, 0);
+        	TranslateAnimation newAnimation = new TranslateAnimation(0, 0, -tpx, 0);
         	newAnimation.setDuration(500);
         	newAnimation.setFillAfter(false);
         	newAnimation.setStartOffset(1000);
@@ -719,8 +729,12 @@ public class DrawingActivity extends Activity {
     	//show the feedback
     	feedbackImageView.setVisibility(View.VISIBLE);
     	
+    	Resources r = getResources();
+    	
+    	float tpx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, feedbackTopOffset, r.getDisplayMetrics());
+    	
     	//show the feedback
-		TranslateAnimation animation = new TranslateAnimation(0, 0, 0, -500);
+		TranslateAnimation animation = new TranslateAnimation(0, 0, 0, -tpx);
 		animation.setDuration(500);
 		animation.setFillAfter(true);
 		animation.setAnimationListener(new MyAnimationListener(feedbackImageView));
@@ -836,8 +850,13 @@ public class DrawingActivity extends Activity {
 		//show it 
 		pointerImageView.setVisibility(View.VISIBLE);
 		
-		int pointerImageWidth = 500;//;
-		int pointerImageHeight = 800;//;
+		Resources r = getResources();
+		
+		float wpx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 500, r.getDisplayMetrics());
+		float hpx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 800, r.getDisplayMetrics());
+		
+		int pointerImageWidth = (int)(wpx);//;
+		int pointerImageHeight = (int)(hpx);//;
 		
 		LayoutParams params = new LayoutParams(
 				pointerImageWidth,      
@@ -862,8 +881,8 @@ public class DrawingActivity extends Activity {
 			{
 				demoAudioFileNameToUse = demoAudioFileName;
 			}
-
-	    	soundResourceId = getResources().getIdentifier(demoAudioFileNameToUse, "raw", getApplicationContext().getPackageName());
+			
+			soundResourceId = getResources().getIdentifier(demoAudioFileNameToUse, "raw", getApplicationContext().getPackageName());
 			
 			//play the sound
 			MediaPlayer mp = MediaPlayer.create(this, soundResourceId);
@@ -1050,9 +1069,13 @@ public class DrawingActivity extends Activity {
 		Intent returnIntent = new Intent();
 		setResult(RESULT_CANCELED, returnIntent);
 		
-		recycleBitmaps();
-		
 		finish();
+		
+		recycleBitmaps();
+
+        System.gc();
+		
+		overridePendingTransition(R.xml.jump_in,R.xml.jump_out);
 	}
 	
 	public static void logHeap() {
